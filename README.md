@@ -11,8 +11,8 @@ Shared data for the Play Time Database project in ARTG 3400, Topics in Interacti
 
 Every file here has a public web address:
 
-- Data: `https://YOUR-USERNAME.github.io/play-time-database-data/data/play-time-database.csv`
-- A photo: `https://YOUR-USERNAME.github.io/play-time-database-data/photos/row-02.jpg`
+- Data: `https://sofiehodara.github.io/playtime-data/data/play-time-database.csv`
+- A photo: `https://sofiehodara.github.io/playtime-data/photos/row-02.jpg`
 
 The `photo` and `video` columns in the CSV give each entry's file path. Add it to the address above to get the full link.
 
