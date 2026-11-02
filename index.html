@@ -5,17 +5,83 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Play Time Database: Data</title>
 <style>
-  body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;max-width:40rem;margin:3rem auto;padding:0 1.25rem;line-height:1.55;color:#111;background:#fff}
-  h1{font-size:1.9rem;margin-bottom:.25rem}
-  p{color:#333}
-  a{color:#111}
-  code{background:#f2f2f2;padding:.1em .35em;border-radius:3px}
+  :root{--ink:#111;--muted:#666;--line:#ddd;--paper:#fff;--tile:#f3f3f3}
+  @media (prefers-color-scheme: dark){:root{--ink:#eee;--muted:#aaa;--line:#333;--paper:#141414;--tile:#222}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+  header{max-width:72rem;margin:0 auto;padding:2.5rem 1.25rem 1rem}
+  h1{font-size:clamp(1.8rem,5vw,2.8rem);line-height:1.05;margin:0 0 .5rem}
+  header p{margin:.25rem 0;color:var(--muted);max-width:40rem}
+  a{color:var(--ink)}
+  code{background:var(--tile);padding:.1em .35em;border-radius:3px;font-size:.9em}
+  .status{margin-top:1rem;font-weight:600}
+  .grid{max-width:72rem;margin:0 auto;padding:1rem 1.25rem 4rem;columns:4 14rem;column-gap:1rem}
+  figure{break-inside:avoid;margin:0 0 1rem;background:var(--tile);border-radius:6px;overflow:hidden}
+  figure a{display:block;text-decoration:none}
+  figure img{display:block;width:100%;height:auto}
+  figure:nth-child(3n+1) img{aspect-ratio:auto}
+  .empty{display:grid;place-items:center;min-height:9rem;padding:1rem;color:var(--muted);text-align:center;font-size:.95rem}
+  figcaption{padding:.6rem .75rem .75rem;font-size:.9rem}
+  figcaption b{display:block;font-size:1rem}
+  figcaption span{color:var(--muted)}
+  .badge{display:inline-block;margin-top:.35rem;font-size:.8rem;border:1px solid var(--line);border-radius:999px;padding:.05rem .5rem}
+  .copy{display:block;margin-top:.5rem;font:inherit;font-size:.85rem;padding:.55rem .75rem;min-height:44px;width:100%;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);cursor:pointer;text-align:left}
 </style>
 </head>
 <body>
+<header>
   <h1>Play Time Database: Data</h1>
   <p>Forty-one observations of play at Northeastern, collected by ARTG 3400: Playful Intervention, Fall 2026.</p>
-  <p><a href="data/play-time-database.csv">Download the data (CSV)</a></p>
-  <p>Photos live in the <code>photos</code> folder, named by row number, for example <a href="photos/row-02.jpg"><code>photos/row-02.jpg</code></a>.</p>
+  <p><a href="data/play-time-database.csv">Download the data (CSV)</a>. Every photo below loads from the <code>photos</code> folder. Tap a photo to open it, or copy its address to use in your own site.</p>
+  <p class="status" id="status" role="status">Loading entries…</p>
+</header>
+<main class="grid" id="grid" aria-label="All entries"></main>
+<script>
+// Small CSV parser that handles quoted fields, commas, and line breaks inside quotes.
+function parseCSV(text){
+  const rows=[];let row=[],field='',q=false;
+  text=text.replace(/^\uFEFF/,'');
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){ if(c=='"'){ if(text[i+1]=='"'){field+='"';i++} else q=false } else field+=c }
+    else if(c=='"') q=true;
+    else if(c==','){row.push(field);field=''}
+    else if(c=='\n'){row.push(field);rows.push(row);row=[];field=''}
+    else if(c!='\r') field+=c;
+  }
+  if(field||row.length){row.push(field);rows.push(row)}
+  const head=rows.shift();
+  return rows.filter(r=>r.length>1).map(r=>Object.fromEntries(head.map((h,i)=>[h,r[i]||''])));
+}
+// Full web address of this folder. Some previews don't have a normal address, so fall back safely.
+let base='';
+try{ if(/^https?:/.test(location.protocol)) base=new URL('.',location.href).href; }catch(e){ base=''; }
+let total=0,ok=0,bad=[];
+function report(){const st=document.getElementById('status');
+  st.textContent = bad.length ? `${ok} of ${total} photos loaded. Missing: ${bad.join(', ')}` : (ok===total ? `All ${total} photos loaded. Everything works.` : `Loading photos… ${ok} of ${total}`);}
+function loaded(){ok++;report()}
+function missing(img,path){bad.push(path);img.parentNode.outerHTML='<div class="empty">Missing file: '+path+'</div>';report()}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+fetch('data/play-time-database.csv').then(r=>{if(!r.ok)throw new Error(r.status);return r.text()}).then(t=>{
+  const rows=parseCSV(t), grid=document.getElementById('grid');
+  let photos=0;
+  grid.innerHTML=rows.map(e=>{
+    const n=String(e.row).padStart(2,'0'), name=e.activity||'(untitled)';
+    const cap=`<figcaption><b>${esc(name)}</b><span>Row ${esc(e.row)}</span>`;
+    if(!e.photo) return `<figure><div class="empty">No photo for this entry</div>${cap}</figure></figcaption>`;
+    photos++;
+    const url=base+e.photo, href=e.video?base+e.video:url;
+    return `<figure><a href="${esc(href)}"><img src="${esc(e.photo)}" alt="Photo for row ${esc(e.row)}: ${esc(name)}"
+      onload="loaded()" onerror="missing(this,'${esc(e.photo)}')"></a>${cap}
+      ${e.video?'<span class="badge">Video: tap to play</span>':''}
+      <button class="copy" type="button" data-url="${esc(url)}">Copy photo address</button></figcaption></figure>`;
+  }).join('');
+  total=photos; report();
+  grid.addEventListener('click',ev=>{const b=ev.target.closest('.copy');if(!b)return;
+    navigator.clipboard.writeText(b.dataset.url).then(()=>{b.textContent='Copied!';setTimeout(()=>b.textContent='Copy photo address',1500)})
+      .catch(()=>{b.textContent=b.dataset.url});});
+}).catch(()=>{
+  document.getElementById('status').textContent='The data didn’t load. If you opened this file directly from your computer, use Live Preview in VS Code instead.';
+});
+</script>
 </body>
 </html>
