@@ -31,13 +31,13 @@ One photo per entry, named by its row number in the Google Sheet. All photos wer
 | 26 | `row-26.jpg` | Rain Stick | ✓ poster frame, plus `row-26.mp4` video |
 | 27 | `row-27.jpg` | Vert Jump | ✓ |
 | 28 | `row-28.jpg` | painting | ✓ |
-| 29 | `row-29.jpg` | Plant Configuration 
+| 29 | `row-29.jpg` | Plant Configuration | ✓ |
 | 30 | `row-30.jpg` | Painting | ✓ |
-| 31 | `row-31.jpg` | Zumba | ✓ (observer says this is the wrong photo) |
+| 31 | `row-31.jpg` | Zumba | ✓ |
 | 32 | `row-32.jpg` | Mobile gaming | ✓ |
 | 33 | `row-33.jpg` | Playing a VR game | ✓ |
 | 34 | `row-34.jpg` | Hiking | ✓ |
-| 35 | `row-35.jpg` | Tailgating/Watching Football Game | 
+| 35 | `row-35.jpg` | Tailgating/Watching Football Game | ✓ |
 | 36 | `row-36.jpg` | Fashion show | ✓ |
 | 37 | `row-37.jpg` | Painting | ✓ |
 | 38 | `row-38.jpg` | Random Flappy Bird playtime | ✓ |
